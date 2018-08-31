@@ -48,6 +48,17 @@ class WizardView(NamedUrlSessionWizardView):
         instance = WizardResponse.objects.create(**self.get_all_cleaned_data())
         return redirect(reverse('done', args=(instance.id,)))
 
+    def get(self, *args, **kwargs):
+        if self.kwargs['step'] != 'done':
+            current_step = int(self.kwargs['step'])
+            for step_i in range(1, current_step):
+                step = str(step_i)
+                form = self.get_form(
+                    step, self.storage.data['step_data'].get(step, {}))
+                if not form.is_valid():
+                    return redirect(self.url_name, step_i)
+        return super().get(*args, **kwargs)
+
     def get_context_data(self, form, **kwargs):
         context = super().get_context_data(form, **kwargs)
         context['data_so_far'] = self.get_all_cleaned_data()
