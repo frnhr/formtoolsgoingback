@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Step 2</title>
+</head>
+<body>
+<h1>Step 2</h1>
+
+<p>Here be data so far:</p>
+<code>{{ data_so_far }}</code>
+
+<p>Here be form:</p>
+<form action="" method="post">
+    {% csrf_token %}
+    {{ wizard.management_form }}
+    {% if wizard.form.forms %}
+        {{ wizard.form.management_form }}
+        {% for form in wizard.form.forms %}
+            {{ form.as_p }}
+        {% endfor %}
+    {% else %}
+        {{ wizard.form.as_p }}
+    {% endif %}
+    <input type="submit" />
+</form>
+
+</body>
+</html>
