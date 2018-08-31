@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 from django import forms
 from django.shortcuts import render, redirect
 from django.urls import reverse
@@ -48,15 +50,21 @@ class WizardView(NamedUrlSessionWizardView):
         instance = WizardResponse.objects.create(**self.get_all_cleaned_data())
         return redirect(reverse('done', args=(instance.id,)))
 
+    def previous_steps(self, current_step):
+        for step in OrderedDict(self.form_list).keys():
+            if step == current_step:
+                raise StopIteration()
+            yield step
+
     def get(self, *args, **kwargs):
-        if self.kwargs['step'] != 'done':
-            current_step = int(self.kwargs['step'])
-            for step_i in range(1, current_step):
-                step = str(step_i)
-                form = self.get_form(
-                    step, self.storage.data['step_data'].get(step, {}))
-                if not form.is_valid():
-                    return redirect(self.url_name, step_i)
+        for step in self.previous_steps(self.kwargs['step']):
+            form = self.get_form(
+                step,
+                data=self.storage.data['step_data'].get(step, {}),
+                files=self.storage.data['step_files'].get(step, {})
+            )
+            if not form.is_valid():
+                return redirect(self.get_step_url(step))
         return super().get(*args, **kwargs)
 
     def get_context_data(self, form, **kwargs):
